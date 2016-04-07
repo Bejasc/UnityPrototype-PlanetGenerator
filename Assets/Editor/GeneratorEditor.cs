@@ -12,20 +12,20 @@ public class GeneratorEditor : Editor {
         
         if(DrawDefaultInspector())
         {
-          gen.DrawMap();
+          gen.GenerateMap();
         }
 
         if(GUILayout.Button("Force ReDraw"))
         {
            // gen.seed = Random.Range(int.MinValue, int.MaxValue);
-            gen.DrawMap();
+            gen.GenerateMap();
 
         }
 
         if (GUILayout.Button("New Seed"))
         {
             gen.seed = Random.Range(int.MinValue, int.MaxValue);
-            gen.DrawMap();
+            gen.GenerateMap();
 
         }
 

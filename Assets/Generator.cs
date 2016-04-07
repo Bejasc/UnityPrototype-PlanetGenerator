@@ -1,8 +1,11 @@
 ﻿using UnityEngine;
-using System.Collections;
+using System.Collections.Generic;
 
 public class Generator : MonoBehaviour {
 
+
+    public enum DrawMode { NoiseMap, ColorMap };
+    public DrawMode drawMode;
     int dimension = 512;
     [Tooltip("Best < 1")]
     public int seed;
@@ -14,42 +17,103 @@ public class Generator : MonoBehaviour {
     public float lacunarity;
     public Texture2D tex;
 
-    public float r;
+    public float PlanetRadius;
 
-    public void DrawMap()
+    public enum TypePlanets { Earth };
+    public TypePlanets PlanetType;
+
+    PlanetBase MyPlanet;
+
+
+    public void GenerateMap()
     {
+
+        MyPlanet = PlanetTypes.GetPlanetType(PlanetType);
+
         tex = new Texture2D(dimension,dimension,TextureFormat.RGBA32,false);
         tex.name = "Procedural Texture";
 
         GetComponent<Renderer>().material.mainTexture = tex;
 
-        float[,] noiseMap = Noise.GenerateNoiseMap(dimension, dimension, seed, noiseScale,octaves,persistence,lacunarity,offset,r);
-        Color[] colourMap = new Color[dimension * dimension];
+        float[,] noiseMap = Noise.GenerateNoiseMap(dimension, dimension, seed, noiseScale,octaves,persistence,lacunarity,offset,PlanetRadius);
 
-        int cnt = tex.height / 2;
-        for(int i = 0; i<tex.width;i++)
+        Color[] mapColors = new Color[dimension*dimension];
+        if(drawMode == DrawMode.ColorMap)
         {
-            //int js = (int)Mathf.Sqrt(r * 2 - i * 2f);
-            for(int j = 0; j<tex.height;j++)
+            mapColors = DrawColourMap(noiseMap);
+        }
+        if(drawMode == DrawMode.NoiseMap)
+        {
+            mapColors = DrawNoiseMap(noiseMap);
+        }
+
+
+        //this block sets anything outside the circle as blank.
+        int cnt = tex.height / 2;
+        for (int i = 0; i < tex.width; i++)
+        {
+            for (int j = 0; j < tex.height; j++)
             {
 
-                if ((i - cnt) * (i - cnt) + (j - cnt) * (j - cnt) < r * r)
+                if (!((i - cnt) * (i - cnt) + (j - cnt) * (j - cnt) < PlanetRadius * PlanetRadius))
                 {
-                    colourMap[i * dimension + j] = Color.Lerp(Color.black, Color.white, noiseMap[i, j]);
+                    mapColors[i * dimension + j] = new Color(0, 0, 0, 0);
                 }
-                else
-                {
-                    colourMap[i * dimension + j] = new Color(0, 0, 0, 0);
 
-                    //tex.SetPixel(i,j,new Color(0,0,0,0));
-                }
             }
         }
-        tex.SetPixels(colourMap);
+
+        tex.SetPixels(mapColors);
         tex.Apply();
 
 
+
     }
+
+
+    Color[] DrawNoiseMap(float[,] noiseMap)
+    {
+        Color[] noiseColors = new Color[dimension * dimension];
+
+        int cnt = tex.height / 2;
+        for (int i = 0; i < tex.width; i++)
+        {
+            for (int j = 0; j < tex.height; j++)
+            {
+                if ((i - cnt) * (i - cnt) + (j - cnt) * (j - cnt) < PlanetRadius * PlanetRadius)
+                {
+                    noiseColors[i * dimension + j] = Color.Lerp(Color.black, Color.white, noiseMap[i, j]);
+                }
+            }
+        }
+
+        return noiseColors;
+    }
+
+    Color[] DrawColourMap(float[,] noiseMap)
+    {
+        Color[] colorMap = new Color[dimension * dimension];
+
+        for (int y = 0; y < dimension; y++)
+        {
+            for (int x = 0; x < dimension; x++)
+            {
+                float currentHeight = noiseMap[x, y];
+
+                for (int i = 0; i < MyPlanet.regions.Length; i++)
+                {
+                    if (currentHeight <= MyPlanet.regions[i].height)
+                    {
+                        colorMap[y * dimension + x] = MyPlanet.regions[i].color;
+                        break;
+                    }
+                }
+            }
+        }
+
+        return colorMap;
+    }
+
 
     void OnValidate()
     {
@@ -59,12 +123,19 @@ public class Generator : MonoBehaviour {
         if (octaves < 0)
             octaves = 0;
 
-        if (r < 64)
-            r = 64;
+        if (PlanetRadius < 64)
+            PlanetRadius = 64;
 
-        if (r > dimension / 2f)
-            r = dimension / 2f;
+        if (PlanetRadius > dimension / 2f)
+            PlanetRadius = dimension / 2f;
+
+    }
+
+    public void SetUpPlanetTypes()
+    {
 
     }
 
 }
+
+

@@ -38,11 +38,10 @@ public static class Noise {
                 for(int i = 0;i<octaves;i++)
                 {
                     float sampleX = (x-center) / scale * frequency + octaveOffsets[i].x;
-                    float sampleY = (y - center) / scale * frequency + octaveOffsets[i].y;
-                   // float sampleY = (Mathf.Sqrt(Mathf.Pow(sampleX,2.0f) - Mathf.Pow(radius, 2.0f)) - center) / scale * frequency + octaveOffsets[i].y;
+                    float sampleY = (y - center) / scale * frequency + octaveOffsets[i].y; //original generator for correct perlin noise 
+                    //float sampleY = (Mathf.Sqrt(Mathf.Pow(sampleX,2.0f) - Mathf.Pow(radius, 2.0f)) - center) / scale * frequency + octaveOffsets[i].y; //modified for spherical generation. uses different value for y.
                     float perlinValue = Mathf.PerlinNoise(sampleX, sampleY) * 2 - 1;
 
-                    //float perlinValue = Mathf.PerlinNoise(sampleX, sampleY) *2 -1;
                     noiseHeight += perlinValue * amplitude;
 
                     amplitude *= persistence;
