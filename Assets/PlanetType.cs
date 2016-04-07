@@ -2,7 +2,7 @@
 using System.Collections;
 
 [System.Serializable]
-public class PlanetBase {
+public class PlanetType {
     public string Name;
     public TerrainType[] regions;
 }

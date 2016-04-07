@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 public class Generator : MonoBehaviour {
 
-
+    public AnimationCurve clip;
     public enum DrawMode { NoiseMap, ColorMap };
     public DrawMode drawMode;
     int dimension = 512;
@@ -19,10 +19,10 @@ public class Generator : MonoBehaviour {
 
     public float PlanetRadius;
 
-    public enum TypePlanets { Earth };
+    public enum TypePlanets { Earth, GreyMoon };
     public TypePlanets PlanetType;
 
-    PlanetBase MyPlanet;
+    PlanetType MyPlanet;
 
 
     public void GenerateMap()
@@ -49,13 +49,17 @@ public class Generator : MonoBehaviour {
 
 
         //this block sets anything outside the circle as blank.
+
+
+        mapColors = AtmosphereDarkener(mapColors);
+
         int cnt = tex.height / 2;
         for (int i = 0; i < tex.width; i++)
         {
             for (int j = 0; j < tex.height; j++)
             {
 
-                if (!((i - cnt) * (i - cnt) + (j - cnt) * (j - cnt) < PlanetRadius * PlanetRadius))
+                if (((i - cnt) * (i - cnt) + (j - cnt) * (j - cnt) > PlanetRadius * PlanetRadius))
                 {
                     mapColors[i * dimension + j] = new Color(0, 0, 0, 0);
                 }
@@ -70,6 +74,32 @@ public class Generator : MonoBehaviour {
 
     }
 
+    Color[] AtmosphereDarkener(Color[] colorMap)
+    {
+        Color[] AtmosphericColourMap = colorMap;
+        int cnt = tex.height / 2;
+
+        for (int i = 0; i < tex.width; i++)
+        {
+            for (int j = 0; j < tex.height; j++)
+            {
+                Color c = colorMap[i * dimension + j];
+                for(float v = 0.95f; v>0.75f;v-=0.05f)
+                {
+                    if ((i - cnt) * (i - cnt) + (j - cnt) * (j - cnt) > v * (PlanetRadius * PlanetRadius))
+                    {
+                        AtmosphericColourMap[i * dimension + j] = new Color(c.r *= v, c.g *= v, c.b *=v, 255);
+                    }
+                }
+
+
+
+
+            }
+        }
+
+        return AtmosphericColourMap;
+    }
 
     Color[] DrawNoiseMap(float[,] noiseMap)
     {
